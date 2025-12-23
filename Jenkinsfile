@@ -18,16 +18,16 @@ pipeline {
 
         stage('Build & Push Image') {
             agent { label 'build-node' }
-            environment {
-                DOCKERHUB_PASS = credentials('dockerhub-pass')
-            }
             steps {
                 unstash 'code'
-                sh '''
-                echo "$DOCKERHUB_PASS" | docker login -u $DOCKERHUB_USER --password-stdin
-                docker build -t $DOCKERHUB_USER/$IMAGE_NAME:latest .
-                docker push $DOCKERHUB_USER/$IMAGE_NAME:latest
-                '''
+
+                withCredentials([string(credentialsId: 'dockerhub-pass', variable: 'DOCKERHUB_PASS')]) {
+                    sh '''
+                    docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+                    docker build -t $DOCKERHUB_USER/$IMAGE_NAME:latest .
+                    docker push $DOCKERHUB_USER/$IMAGE_NAME:latest
+                    '''
+                }
             }
         }
 
